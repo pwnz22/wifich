@@ -413,10 +413,14 @@ def main():
                 marks.append("сейчас")
             print(f"  {c:>2}: {scores[c]:7.0f}   {'← ' + ', '.join(marks) if marks else ''}")
         if cur is None:
-            print("  (Mac сейчас не подключён к сети 2.4 ГГц — текущий канал модема неизвестен)")
+            print("  (Mac сейчас не подключён к сети 2.4 ГГц — текущий канал модема неизвестен,\n"
+                  "   а его собственная сеть может считаться соседней, поэтому оценка неточная)")
 
         if args.scan:
             return
+        if cur is None and not args.dry_run and not args.dump:
+            sys.exit("\nКанал не меняю: без подключения к 2.4 ГГц оценка ненадёжна.\n"
+                     "Подключи Mac к сети 2.4 ГГц этого модема или укажи канал вручную через --force N.")
         need = cur not in CANDIDATES or scores[cur] > SWITCH_RATIO * scores[best] + 1
         if not need and not args.dry_run and not args.dump:
             print(f"\nКанал {cur} в порядке, переключать не нужно.")
@@ -449,6 +453,8 @@ def main():
     if not form:
         sys.exit("Не нашёл страницу WLAN Basic Settings с полем канала. Возможно, эта прошивка не поддерживается;\n"
                  "страницу можно сохранить через --dump и посмотреть, как называется поле канала.")
+    if args.dump and not args.dry_run:
+        return
 
     data, unknown = build_payload(form, chan_field=chan_field, channel=target)
     action = urllib.parse.urljoin(url, form["action"] or url)

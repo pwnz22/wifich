@@ -20,7 +20,7 @@
 
 - macOS. Анализ эфира работает только здесь; `--force` меняет канал и на других системах, но без проверки результата.
 - Python 3, сторонние библиотеки не нужны.
-- Mac подключён к Wi-Fi этого модема по 2.4 ГГц. Если он на 5 ГГц, текущий канал модема неизвестен.
+- Mac подключён к Wi-Fi этого модема по 2.4 ГГц. На 5 ГГц текущий канал модема неизвестен, поэтому `wifich` покажет приблизительный анализ, но канал не поменяет; вручную его можно поставить через `--force`.
 - Пароль от веб-интерфейса модема.
 
 ## Какие модемы подходят
@@ -64,7 +64,7 @@ wifich              # анализ и переключение, если ест�
 wifich --scan       # только анализ эфира, модем не трогаем
 wifich --dry-run    # анализ и вход в модем: показать, что будет отправлено, ничего не меняя
 wifich --force 6    # поставить канал 6 без анализа
-wifich --dump       # сохранить страницу настроек в bdcom-wlan.html для отладки
+wifich --dump       # сохранить страницу настроек в bdcom-wlan.html для отладки, ничего не меняя
 ```
 
 Пример вывода `wifich --scan`:
@@ -90,7 +90,9 @@ wifich --dump       # сохранить страницу настроек в bd
 
 Модем при сохранении принимает всю форму настроек целиком, а не только канал. Прошивка выставляет значения выпадающих списков через JavaScript, поэтому скрипт не видит их в HTML. Без этой переменной он напишет «Не удалось определить текущие значения полей» и ничего не отправит, чтобы не сбить настройки.
 
-Откройте в веб-интерфейсе модема страницу WLAN Basic Settings и перечислите через запятую значения всех выпадающих списков, кроме канала, так, как они там подписаны: диапазон, режим, ширина канала, боковая полоса, мощность, лимит клиентов, регион. Пример из установки взят с настроек конкретного модема, не копируйте его вслепую. Затем сверьте результат:
+Откройте в веб-интерфейсе модема страницу WLAN Basic Settings и перечислите через запятую значения всех выпадающих списков, кроме канала, так, как они там подписаны: диапазон, режим, ширина канала, боковая полоса, мощность, лимит клиентов, регион. Пример из установки взят с настроек конкретного модема, не копируйте его вслепую.
+
+Каждое значение применяется ко всем спискам, где есть такой пункт: если указать `Disabled` для одного списка, он подойдёт и другому, где сейчас стоит `Enabled`, и тот будет выключен. Поэтому обязательно сверьте результат:
 
 ```sh
 wifich --dry-run
@@ -112,7 +114,7 @@ wifich --dry-run
 
 It scans the air with macOS `system_profiler`, scores channels 1, 6 and 11 by neighbours' signal and channel width, and logs in to the modem only if the current channel is more than twice as congested as the best one.
 
-**Requirements:** macOS, Python 3 (no dependencies), and a Mac connected to the modem over 2.4 GHz.
+**Requirements:** macOS, Python 3 (no dependencies), and a Mac connected to the modem over 2.4 GHz. On 5 GHz it only shows a rough analysis and won't switch; use `--force` to set a channel by hand.
 
 **Compatibility:** tested on one BDCOM modem with a Realtek-based web UI (`/admin/wlbasic.asp`, `formWlanSetup`). Other firmware may not work. `wifich --dry-run` checks yours without changing anything.
 
@@ -133,7 +135,7 @@ wifich --dry-run    # log in and show what would be sent, change nothing
 wifich --force 6    # set channel 6 without analysis
 ```
 
-`BDCOM_KEEP_OPTIONS` matters: the modem takes the whole settings form on save, and the firmware sets its dropdowns through JavaScript, so the script can't read them from the HTML. Without this variable it refuses to submit rather than risk resetting your settings. List every dropdown except the channel, as labelled on the WLAN Basic Settings page and comma-separated, then check the result with `wifich --dry-run`. The example above comes from one specific modem, so don't copy it blindly. The program's messages are in Russian.
+`BDCOM_KEEP_OPTIONS` matters: the modem takes the whole settings form on save, and the firmware sets its dropdowns through JavaScript, so the script can't read them from the HTML. Without this variable it refuses to submit rather than risk resetting your settings. List every dropdown except the channel, as labelled on the WLAN Basic Settings page and comma-separated. The example above comes from one specific modem, so don't copy it blindly. Each value applies to every dropdown that has that option, so `Disabled` listed for one list also turns off another that's currently `Enabled`: always check the result with `wifich --dry-run`. The program's messages are in Russian.
 
 ## License
 
